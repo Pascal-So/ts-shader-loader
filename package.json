@@ -47,9 +47,6 @@
     "testRegex": "/*/*.spec.ts"
   },
   "dependencies": {
-    "@types/jest": "^21.1.6",
-    "@types/loader-utils": "^1.1.0",
-    "@types/node": "^8.0.51",
     "loader-utils": "^1.1.0"
   },
   "devDependencies": {
@@ -60,6 +57,9 @@
     "memory-fs": "^0.4.1",
     "tslint": "^5.8.0",
     "tslint-config-airbnb": "^5.3.0",
-    "webpack": "^3.8.1"
+    "webpack": "^3.8.1",
+    "@types/jest": "^21.1.6",
+    "@types/loader-utils": "^1.1.0",
+    "@types/node": "^8.0.51"
   }
 }
