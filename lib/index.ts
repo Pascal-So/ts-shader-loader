@@ -54,7 +54,7 @@ function processImports(loader, source, context, imports, cb) {
 export default function (source) {
   this.cacheable();
   const cb = this.async();
-  
+
   parse(this, source, this.context, (err, bld) => {
     if (err) return cb(err);
 
