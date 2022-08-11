@@ -1,63 +1,78 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { getOptions } from 'loader-utils';
+import { dirname } from "path";
+import { readFile } from "fs/promises";
+import { LoaderContext } from "webpack";
 
-const name = 'webpack-glsl-loader';
+interface LoaderOptions {}
 
-function parse(loader, source, context, cb) {
-  const imports = [];
-  const importPattern = /@import ([.\/\w_-]+);/gi;
+interface Import {
+  key: string;
+  target: string;
+}
+
+async function parse(
+  loader: LoaderContext<LoaderOptions>,
+  source: string,
+  context: string
+): Promise<string> {
+  const importPattern = /@import ([./\w_-]+);/gi;
+
+  // Find all imports
+  const imports: Import[] = [];
+
   let match = importPattern.exec(source);
-
   while (match != null) {
     imports.push({
       key: match[1],
       target: match[0],
-      content: '',
     });
     match = importPattern.exec(source);
   }
 
-  processImports(loader, source, context, imports, cb);
+  // Process all imports
+  return processImports(loader, source, context, imports);
 }
 
-function processImports(loader, source, context, imports, cb) {
-  if (imports.length === 0) {
-    return cb(null, source);
+async function processImports(
+  loader: LoaderContext<LoaderOptions>,
+  source: string,
+  context: string,
+  imports: Import[]
+): Promise<string> {
+  // In case no imports are available,
+  const imp = imports.pop();
+  if (imp === undefined) {
+    return source;
   }
 
-  const imp = imports.pop();
+  // Resolve import path
+  const resolvedPath = await loader.getResolve()(context, `${imp.key}.glsl`);
+  loader.addDependency(resolvedPath);
 
-  loader.resolve(context, `${imp.key}.glsl`, (err, resolved) => {
-    if (err) {
-      return cb(err);
-    }
+  // Parse import
+  const parsedImport = await parse(
+    loader,
+    await readFile(resolvedPath, "utf-8"),
+    dirname(resolvedPath)
+  );
 
-    loader.addDependency(resolved);
-    fs.readFile(resolved, 'utf-8', (err, src) => {
-      if (err) {
-        return cb(err);
-      }
+  // Inject import in to the source
+  const newSource = source.replace(imp.target, parsedImport);
 
-      parse(loader, src, path.dirname(resolved), (err, bld) => {
-        if (err) {
-          return cb(err);
-        }
-
-        const newSource = source.replace(imp.target, bld);
-        processImports(loader, newSource, context, imports, cb);
-      });
-    });
-  });
+  // Continue processing imports with the new source
+  return processImports(loader, newSource, context, imports);
 }
 
-export default function (source) {
+export default function (this: LoaderContext<LoaderOptions>, source: string) {
   this.cacheable();
-  const cb = this.async();
+  const callback = this.async();
 
-  parse(this, source, this.context, (err, bld) => {
-    if (err) return cb(err);
+  parse(this, source, this.context)
+    .then(
+      (sourceWithIncludes) =>
+        `export default ${JSON.stringify(sourceWithIncludes)}`
+    )
+    .then((sourceWithIncludes) => callback(null, sourceWithIncludes))
+    .catch((err) => callback(err));
 
-    cb(null, `export default ${JSON.stringify(bld)}`);
-  });
+  return undefined;
 }

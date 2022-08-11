@@ -1,39 +1,27 @@
-import compiler from '../test/compiler';
-import * as fs from 'fs';
-import * as path from 'path';
+import { testCompiler } from "../test/compiler";
+import * as fs from "fs";
+import * as path from "path";
 
-const shader = (extension) => path.resolve(__dirname, `../test/exampleShader.${extension}`)  ;
-const shaderContents = (extension) => JSON.stringify(fs.readFileSync(shader(extension)).toString());
+const shader = (extension: string) =>
+  path.resolve(__dirname, `../test/exampleShader${extension}`);
+const shaderContents = (extension: string) =>
+  JSON.stringify(fs.readFileSync(shader(extension)).toString());
 
+describe("Test extensions", () => {
+  test.each([".glsl", ".vs", ".fs"])("extension %s", async (extension) => {
+    const { stats, bundleJs } = await testCompiler(shader(extension));
+    const data = stats.toJson({ source: true });
 
-describe('Test extensions', () => {
-  test('.glsl', async () => {
-    const data = (await compiler(shader('glsl'))).toJson();
+    console.log(bundleJs, stats.toJson());
 
-    if (data.errors && data.errors.length > 0) throw Error(data.errors[0]);
+    expect(data.errors).toEqual([]);
+    expect(data.modules).toBeDefined();
 
-    const output = data.modules[0].source;
+    // Just to satisfy typescript.
+    if (data.modules === undefined) return;
 
-    expect(output).toBe(`export default ${shaderContents('glsl')}`);
+    expect(data.modules[0].source).toBe(
+      `export default ${shaderContents(extension)}`
+    );
   });
-
-  test('.vs', async () => {
-    const data = (await compiler(shader('vs'))).toJson();
-
-    if (data.errors && data.errors.length > 0) throw Error(data.errors[0]);
-
-    const output = data.modules[0].source;
-
-    expect(output).toBe(`export default ${shaderContents('vs')}`);
-  });
-
-  test('.fs', async () => {
-    const data = (await compiler(shader('fs'))).toJson();
-
-    if (data.errors && data.errors.length > 0) throw Error(data.errors[0]);
-
-    const output = data.modules[0].source;
-
-    expect(output).toBe(`export default ${shaderContents('fs')}`);
-  });
-})
+});
