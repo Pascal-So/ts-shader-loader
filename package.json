@@ -3,7 +3,7 @@
   "version": "1.0.6",
   "description": "A webpack loader for glsl shaders - includes support for nested imports. Re-Written in TypeScript",
   "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
+  "types": "lib/index.d.ts",
   "scripts": {
     "test": "jest",
     "lint": "eslint",
