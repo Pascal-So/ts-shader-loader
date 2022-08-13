@@ -9,15 +9,14 @@ The shader is returned as a string.
 
 I had a problem using other webpack shader loaders with typescript. While i was investigating what is the problem, i forked and tried to make my version work with typescript. Other than support with typescript, it has no other benefits.
 
-## Install
+## Quick Guide
 
+#### 1. Install
 ```shell
 npm install --save-dev ts-shader-loader
 ```
 
-## Usage
-
-## In configuration
+#### 2. Add to webpack configuration
 
 ```javascript
 {
@@ -31,20 +30,41 @@ npm install --save-dev ts-shader-loader
     }
 }
 ```
+#### 3. Declare shared files as modules
 
-and then
+Create `glsl.d.ts` file in your project and add the following in to it:
+
+```ts
+declare module "*.glsl" {
+  const value: string;
+  export default value;
+}
+
+declare module "*.vs" {
+  const value: string;
+  export default value;
+}
+
+declare module "*.fs" {
+  const value: string;
+  export default value;
+}
+```
+
+#### 4. Import shaders
 
 ```javascript
-import myLovleyShaderGlsl from './myLovelyShader.glsl';
+import myShader from './myShader.glsl';
+
+console.log(myShader);
 ```
 
 
-## Imports
+## Includes
 
-This loader supports an import syntax to allow you to maximise your code reuse
-and keep those shaders
-[DRY](http://en.wikipedia.org/wiki/Don%27t_repeat_yourself). This syntax is 
-very similar to that of SASS.
+This loader supports `#include "path/to/shader.glsl"` syntax, which you can
+use inside your shaders.
+
 
 ### Example
 
@@ -59,13 +79,13 @@ src/
 ---- ---- fragment.glsl
 ```
 
-If I require my fragment shader inside `main.js`:
+If we `import` `fragment.glsl` shader inside `main.ts`:
 
 ```javascript
-import shader from '../shaders/fragment.glsl');
+import shader from '../shaders/fragment.glsl';
 ```
 
-I can have that shader include other `.glsl` files inline, like so:
+We can have that shader include other `.glsl` files inline, like so:
 
 ```sass
 #include "./includes/perlin-noise.glsl";
@@ -74,8 +94,7 @@ I can have that shader include other `.glsl` files inline, like so:
 > **N.B.** all includes within `.glsl` are relative to the file doing the importing.
 
 Imported files are parsed for `#include` statements as well, so you can nest
-imports as deep as you'd like (although, you should probably rethink your
-shader if you require any more than 2 levels).
+imports as deep as you'd like.
 
 Imported files are inserted directly into the source file in place of the
 `#include` statement and no special handling or error checking is provided. So,

@@ -15,6 +15,9 @@ npm-debug.log
 
 # dist
 lib/*.js
+test/*.js
+lib/*.d.ts
+test/*.d.ts
 
 # config
 .env

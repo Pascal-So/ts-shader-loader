@@ -4,9 +4,10 @@
     "module": "commonjs",
     "sourceMap": false,
     "lib": ["es2015", "dom"],
-    "suppressImplicitAnyIndexErrors": true,
     "esModuleInterop": true,
     "strict": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "declaration": true
+  },
+  "exclude": ["example"]
 }
